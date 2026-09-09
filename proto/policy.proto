@@ -1,0 +1,18 @@
+syntax = "proto3";
+package atlas;
+service Policy {
+  rpc Evaluate (EvaluationRequest) returns (Decision);
+  rpc Flight (FlightRequest) returns (FlightDecision);
+}
+message EvaluationRequest {
+  int32 actor_role = 1;
+  bool is_self = 2;
+  int32 target_role = 3;
+  bool target_active = 4;
+  int32 active_admins = 5;
+  int32 action = 6;
+  int32 requested_role = 7;
+}
+message Decision { bool allowed = 1; int32 risk = 2; string reason = 3; }
+message FlightRequest { string subject = 1; string flag = 2; uint32 percent = 3; }
+message FlightDecision { bool enabled = 1; }

@@ -1,0 +1,31 @@
+{
+  "name": "atlas-admin-platform",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/admin",
+    "packages/ux"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @atlas/admin",
+    "build": "npm run build --workspace @atlas/ux && npm run build --workspace @atlas/admin",
+    "typecheck": "tsc --noEmit -p apps/admin/tsconfig.json",
+    "test:ui": "vitest run",
+    "test:e2e": "playwright test",
+    "check": "npm run build && npm run typecheck && npm run test:ui"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "@playwright/test": "1.51.1",
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/react": "16.2.0",
+    "@testing-library/user-event": "14.6.1",
+    "@types/react": "19.0.12",
+    "@types/react-dom": "19.0.4",
+    "jsdom": "26.0.0",
+    "prettier": "3.5.3",
+    "typescript": "5.8.3",
+    "vite": "6.3.6",
+    "vitest": "3.1.1"
+  }
+}

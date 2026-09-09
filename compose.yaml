@@ -1,0 +1,59 @@
+services:
+  policy:
+    build: .
+    command: ["python", "-m", "services.policy.server"]
+    environment:
+      POLICY_TOKEN: ${POLICY_TOKEN:?Run python scripts/setup.py first}
+      POLICY_BIND: 0.0.0.0:50051
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://collector:4318
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+  gateway:
+    build: .
+    ports: ["127.0.0.1:8000:8000"]
+    environment:
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.test}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Run python scripts/setup.py first}
+      POLICY_TOKEN: ${POLICY_TOKEN:?Run python scripts/setup.py first}
+      POLICY_ADDRESS: policy:50051
+      DATABASE_PATH: /app/data/atlas.db
+      APP_ORIGIN: http://localhost:8000
+      COOKIE_SECURE: "false"
+      SEED_DEMO: ${SEED_DEMO:-true}
+      AI_PROVIDER: ${AI_PROVIDER:-demo}
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-}
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-}
+      AZURE_OPENAI_DEPLOYMENT: ${AZURE_OPENAI_DEPLOYMENT:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://collector:4318
+    volumes: ["data:/app/data"]
+    depends_on: [policy, collector]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/ready',timeout=4)",
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.123.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes: ["./observability/collector.yaml:/etc/otelcol/config.yaml:ro"]
+    ports: ["127.0.0.1:4318:4318", "127.0.0.1:8889:8889"]
+    depends_on: [jaeger]
+  jaeger:
+    image: jaegertracing/all-in-one:1.68.0
+    ports: ["127.0.0.1:16686:16686"]
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+volumes:
+  data:
