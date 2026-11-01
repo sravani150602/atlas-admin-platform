@@ -8,7 +8,7 @@ COPY packages packages
 COPY apps apps
 RUN npm run build
 
-FROM python:3.12-slim-bookworm AS native
+FROM python:3.15-slim-bookworm AS native
 RUN apt-get update && apt-get install -y --no-install-recommends gcc make libc6-dev && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY requirements.lock.txt ./
@@ -18,7 +18,7 @@ COPY engine engine
 COPY proto proto
 RUN make all && mkdir -p services/policy && /venv/bin/python -m grpc_tools.protoc -I proto --python_out=services/policy --grpc_python_out=services/policy proto/policy.proto
 
-FROM python:3.12-slim-bookworm AS runtime
+FROM python:3.15-slim-bookworm AS runtime
 RUN useradd --uid 10001 --create-home atlas
 WORKDIR /app
 COPY --from=native /venv /venv
